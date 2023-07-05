@@ -18,6 +18,36 @@ db.init_app(app)
 
 api = Api(app)
 
+class Login(Resource):
+    def post(self):
+
+        username = request.get_json()['username']
+
+        user = User.query.filter(User.username == username).first()
+        session['user_id'] = user.id
+
+        user_json = jsonify(user.to_dict())
+        return make_response(user_json, 200)
+    
+class Logout(Resource):
+    def delete(self):
+        session['user_id'] = None
+        return ('', 204)
+
+
+class CheckSession(Resource):
+    def get(self):
+        user_id = session['user_id']
+        if user_id:
+            user = User.query.filter(User.id == user_id).first()
+            user_json = jsonify(user.to_dict())
+            return make_response(user_json, 200) 
+        else:
+            return({}, 401)
+
+
+        
+
 class ClearSession(Resource):
 
     def delete(self):
@@ -51,6 +81,9 @@ class ShowArticle(Resource):
 api.add_resource(ClearSession, '/clear')
 api.add_resource(IndexArticle, '/articles')
 api.add_resource(ShowArticle, '/articles/<int:id>')
+api.add_resource(Login, '/login')
+api.add_resource(Logout, '/logout')
+api.add_resource(CheckSession, '/check_session')
 
 
 if __name__ == '__main__':
